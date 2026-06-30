@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Gym — Forge Your Strength</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,900;1,700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --black:#070708;
+  --iron:#111113;
+  --steel:#1e1e22;
+  --plate:#2a2a30;
+  --ash:#5e5e68;
+  --silver:#9898a8;
+  --fog:#c8c8d8;
+  --white:#f0f0f5;
+  --red:#d4192c;
+  --red2:#a81020;
+  --gold:#c8962a;
+  --gold2:#a07820;
+  --rglow:rgba(212,25,44,0.15);
+  --gglow:rgba(200,150,42,0.12);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--black);color:var(--white);font-family:'Inter',sans-serif;overflow-x:hidden;line-height:1.6}
+
+/* ── CANVAS BG ── */
+#three-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 6vw;height:68px;
+  background:rgba(7,7,8,0.75);
+  backdrop-filter:blur(20px) saturate(1.4);
+  border-bottom:1px solid rgba(212,25,44,0.18);
+  transition:background 0.3s;
+}
+.nav-logo{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.75rem;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;
+  color:var(--white);text-decoration:none;
+  display:flex;align-items:center;gap:2px;
+}
+.nav-logo .accent{color:var(--red)}
+.nav-logo .mark{
+  width:8px;height:8px;background:var(--gold);
+  border-radius:50%;margin-left:4px;margin-bottom:12px;
+  display:inline-block;
+}
+.nav-links{display:flex;gap:2.5rem;list-style:none}
+.nav-links a{
+  color:var(--silver);text-decoration:none;
+  font-size:0.78rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  transition:color 0.2s;position:relative;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;
+  background:var(--red);transform:scaleX(0);transform-origin:left;
+  transition:transform 0.25s;
+}
+.nav-links a:hover{color:var(--white)}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav-cta{
+  background:linear-gradient(135deg,var(--red),var(--red2));
+  color:var(--white);border:none;
+  padding:0.55rem 1.4rem;border-radius:3px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;transition:opacity 0.2s,transform 0.15s;
+  text-decoration:none;display:inline-block;
+}
+.nav-cta:hover{opacity:0.85;transform:translateY(-1px)}
+
+/* hamburger */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+.hamburger span{width:24px;height:2px;background:var(--white);border-radius:2px;transition:all 0.3s}
+.mobile-menu{
+  display:none;position:fixed;top:68px;left:0;right:0;z-index:99;
+  background:rgba(7,7,8,0.97);backdrop-filter:blur(20px);
+  padding:1.5rem 6vw;flex-direction:column;gap:1.5rem;
+  border-bottom:1px solid rgba(212,25,44,0.18);
+}
+.mobile-menu a{color:var(--silver);text-decoration:none;font-size:1.1rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase}
+.mobile-menu.open{display:flex}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:flex;align-items:center;
+  padding:7rem 6vw 5rem;
+  position:relative;overflow:hidden;
+  z-index:1;
+}
+.hero-overlay{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 55% 70% at 65% 50%,rgba(212,25,44,0.08) 0%,transparent 65%),
+    linear-gradient(180deg,rgba(7,7,8,0.4) 0%,rgba(7,7,8,0.85) 100%);
+  z-index:0;
+}
+.hero-content{position:relative;z-index:1;max-width:660px}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:0.6rem;
+  font-size:0.72rem;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:1.4rem;
+}
+.hero-eyebrow::before{content:'';width:28px;height:1px;background:var(--gold)}
+.hero-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(4rem,9.5vw,8.5rem);
+  font-weight:900;line-height:0.9;text-transform:uppercase;
+  letter-spacing:-0.015em;margin-bottom:1.6rem;
+}
+.hero-title .line2{
+  color:transparent;
+  -webkit-text-stroke:2px var(--red);
+  display:block;
+}
+.hero-title .line3{color:var(--white);display:block}
+.hero-sub{
+  font-size:1.05rem;font-weight:300;color:var(--silver);
+  max-width:440px;margin-bottom:2.8rem;line-height:1.8;
+}
+.hero-actions{display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+.btn-primary{
+  background:var(--red);color:var(--white);
+  border:none;padding:0.9rem 2.2rem;border-radius:3px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.15rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
+  text-decoration:none;display:inline-block;
+  box-shadow:0 0 0 0 var(--rglow);
+}
+.btn-primary:hover{background:var(--red2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(212,25,44,0.35)}
+.btn-ghost{
+  background:transparent;color:var(--white);
+  border:1px solid rgba(240,240,245,0.22);padding:0.9rem 2.2rem;border-radius:3px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.15rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;
+  text-decoration:none;display:inline-block;
+}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.scroll-hint{
+  position:absolute;bottom:2.5rem;left:6vw;z-index:1;
+  display:flex;align-items:center;gap:0.75rem;
+  color:var(--ash);font-size:0.72rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;
+}
+.scroll-line{width:40px;height:1px;background:var(--ash)}
+
+/* ── STATS STRIP ── */
+.stats-strip{
+  position:relative;z-index:2;
+  background:rgba(17,17,19,0.92);
+  backdrop-filter:blur(12px);
+  border-top:1px solid rgba(200,150,42,0.3);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  display:flex;justify-content:center;flex-wrap:wrap;
+}
+.stat-item{
+  flex:1;min-width:120px;max-width:220px;
+  padding:2rem 2rem;text-align:center;
+  border-right:1px solid rgba(255,255,255,0.05);
+  position:relative;
+}
+.stat-item:last-child{border-right:none}
+.stat-item::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:24px;height:2px;background:var(--gold);
+}
+.stat-num{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:2.6rem;font-weight:900;color:var(--white);line-height:1;
+}
+.stat-num span{color:var(--gold)}
+.stat-label{font-size:0.68rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--ash);margin-top:0.35rem}
+
+/* ── SECTION BASE ── */
+section{position:relative;z-index:2;padding:6rem 6vw}
+.section-eyebrow{
+  display:inline-flex;align-items:center;gap:0.6rem;
+  font-size:0.7rem;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:0.8rem;
+}
+.section-eyebrow::before{content:'';width:20px;height:1px;background:var(--gold)}
+.section-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(2.2rem,5.5vw,4rem);
+  font-weight:900;text-transform:uppercase;line-height:0.95;
+  margin-bottom:1.2rem;letter-spacing:-0.01em;
+}
+.section-sub{color:var(--silver);font-weight:300;max-width:500px;line-height:1.75;margin-bottom:3rem}
+
+/* ── PROGRAMS ── */
+#programs{background:var(--iron)}
+.prog-header{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:3rem}
+.programs-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1px;background:rgba(255,255,255,0.04);
+}
+.program-card{
+  background:var(--iron);padding:2.25rem 2rem;
+  position:relative;overflow:hidden;
+  transition:background 0.3s;cursor:default;
+  display:flex;flex-direction:column;gap:0.75rem;
+}
+.program-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--rglow),transparent);
+  opacity:0;transition:opacity 0.3s;
+}
+.program-card:hover{background:#161618}
+.program-card:hover::before{opacity:1}
+.prog-num{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:0.72rem;font-weight:700;letter-spacing:0.18em;
+  color:var(--ash);text-transform:uppercase;
+}
+.prog-img{
+  width:100%;height:160px;object-fit:cover;border-radius:2px;
+  opacity:0.8;transition:opacity 0.3s;filter:grayscale(20%);
+}
+.program-card:hover .prog-img{opacity:1;filter:grayscale(0)}
+.prog-name{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.55rem;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;
+}
+.prog-desc{color:var(--silver);font-size:0.88rem;line-height:1.65;flex:1}
+.prog-tag{
+  display:inline-block;padding:0.2rem 0.6rem;border-radius:2px;
+  font-size:0.68rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  background:rgba(212,25,44,0.12);color:var(--red);
+  border:1px solid rgba(212,25,44,0.2);
+  align-self:flex-start;margin-top:auto;
+}
+
+/* ── TRAINERS ── */
+#trainers{background:var(--black)}
+.trainers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:2rem}
+.trainer-card{
+  position:relative;border-radius:3px;overflow:hidden;
+  transition:transform 0.3s;
+  background:var(--iron);
+  border:1px solid rgba(255,255,255,0.05);
+}
+.trainer-card:hover{transform:translateY(-6px)}
+.trainer-card:hover .trainer-overlay{opacity:1}
+.trainer-img-wrap{position:relative;height:240px;overflow:hidden}
+.trainer-img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s;filter:grayscale(30%)}
+.trainer-card:hover .trainer-img{transform:scale(1.05);filter:grayscale(0)}
+.trainer-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(212,25,44,0.7),transparent 50%);
+  opacity:0;transition:opacity 0.3s;
+}
+.trainer-badge{
+  position:absolute;top:12px;right:12px;
+  background:var(--gold);color:var(--black);
+  font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  padding:0.2rem 0.5rem;border-radius:2px;
+}
+.trainer-info{padding:1.4rem}
+.trainer-name{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;margin-bottom:0.2rem}
+.trainer-role{color:var(--red);font-size:0.72rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:0.6rem}
+.trainer-bio{color:var(--silver);font-size:0.85rem;line-height:1.6}
+
+/* ── GALLERY STRIP ── */
+.gallery-strip{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:2fr 1fr 1fr;
+  height:380px;gap:2px;background:var(--steel);
+}
+.gallery-item{overflow:hidden;position:relative}
+.gallery-item img{width:100%;height:100%;object-fit:cover;transition:transform 0.5s;filter:brightness(0.75)}
+.gallery-item:hover img{transform:scale(1.05);filter:brightness(0.9)}
+.gallery-caption{
+  position:absolute;bottom:1rem;left:1rem;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:0.75rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;
+  color:rgba(240,240,245,0.6);
+}
+@media(max-width:600px){.gallery-strip{grid-template-columns:1fr;height:auto}.gallery-item{height:180px}}
+
+/* ── CONTACT ── */
+#contact{background:var(--iron)}
+.contact-layout{display:grid;grid-template-columns:1fr 1.3fr;gap:5rem;align-items:start}
+@media(max-width:860px){.contact-layout{grid-template-columns:1fr;gap:3rem}}
+.contact-info-block{display:flex;flex-direction:column;gap:1.75rem}
+.contact-info-item{
+  display:flex;align-items:flex-start;gap:1rem;
+  padding-bottom:1.75rem;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.contact-info-item:last-child{border-bottom:none}
+.c-icon{
+  width:44px;height:44px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(212,25,44,0.1);border:1px solid rgba(212,25,44,0.2);
+  border-radius:3px;font-size:1.15rem;
+}
+.c-label{font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--ash);margin-bottom:0.2rem}
+.c-value{color:var(--white);font-size:0.95rem;line-height:1.5}
+
+/* Form */
+.form-wrapper{
+  background:rgba(30,30,34,0.6);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:4px;padding:2.5rem;
+  backdrop-filter:blur(8px);
+}
+.form-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.5rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.04em;margin-bottom:1.75rem;
+}
+.form-title span{color:var(--red)}
+form{display:flex;flex-direction:column;gap:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:0.35rem}
+.field label{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--ash)}
+.field input,.field select,.field textarea{
+  background:rgba(42,42,48,0.8);
+  border:1px solid rgba(255,255,255,0.08);
+  color:var(--white);padding:0.8rem 1rem;border-radius:3px;
+  font-family:'Inter',sans-serif;font-size:0.93rem;
+  transition:border-color 0.2s,background 0.2s;outline:none;width:100%;
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--ash)}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--red);background:rgba(42,42,48,1);
+}
+.field select option{background:#1e1e22}
+.field textarea{resize:vertical;min-height:100px}
+.form-submit{
+  background:var(--red);color:var(--white);
+  border:none;padding:0.95rem;border-radius:3px;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:1.15rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:background 0.2s,transform 0.15s;width:100%;margin-top:0.25rem;
+}
+.form-submit:hover{background:var(--red2);transform:translateY(-1px)}
+.form-submit:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.form-msg{padding:0.75rem 1rem;border-radius:3px;font-size:0.88rem;display:none;margin-top:0.25rem}
+.form-msg.ok{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);color:#4ade80;display:block}
+.form-msg.err{background:rgba(212,25,44,0.1);border:1px solid rgba(212,25,44,0.25);color:#f87171;display:block}
+
+/* ── FOOTER ── */
+footer{
+  position:relative;z-index:2;
+  background:var(--black);border-top:1px solid rgba(255,255,255,0.05);
+  padding:3rem 6vw 2rem;
+}
+.footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:3rem;margin-bottom:2.5rem}
+@media(max-width:640px){.footer-grid{grid-template-columns:1fr}}
+.footer-logo{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.75rem}
+.footer-logo span{color:var(--red)}
+.footer-tagline{color:var(--ash);font-size:0.85rem;line-height:1.7;max-width:260px}
+.footer-col-title{font-size:0.68rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:0.6rem}
+.footer-links a{color:var(--ash);text-decoration:none;font-size:0.88rem;transition:color 0.2s}
+.footer-links a:hover{color:var(--white)}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.05);padding-top:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem}
+.footer-copy{color:var(--ash);font-size:0.78rem}
+/* Hidden admin trigger - just a tiny dot in the copyright */
+.admin-dot{
+  width:6px;height:6px;background:var(--plate);border-radius:50%;
+  display:inline-block;cursor:pointer;margin-left:6px;
+  transition:background 0.3s;vertical-align:middle;
+}
+.admin-dot:hover{background:var(--red)}
+
+/* ── LOGIN MODAL ── */
+.modal-backdrop{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.88);backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;
+}
+.modal-backdrop.show{display:flex}
+.modal-box{
+  background:var(--iron);
+  border:1px solid rgba(212,25,44,0.25);
+  border-top:3px solid var(--red);
+  border-radius:4px;padding:2.5rem;width:100%;max-width:360px;
+  position:relative;
+}
+.modal-close-btn{
+  position:absolute;top:1rem;right:1rem;
+  background:none;border:none;color:var(--ash);font-size:1.2rem;cursor:pointer;
+  transition:color 0.2s;line-height:1;
+}
+.modal-close-btn:hover{color:var(--white)}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:1.5rem}
+.modal-title span{color:var(--red)}
+.modal-field{display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.9rem}
+.modal-field label{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--ash)}
+.modal-field input{
+  background:var(--steel);border:1px solid rgba(255,255,255,0.08);
+  color:var(--white);padding:0.78rem 1rem;border-radius:3px;
+  font-family:'Inter',sans-serif;font-size:0.93rem;
+  outline:none;width:100%;transition:border-color 0.2s;
+}
+.modal-field input:focus{border-color:var(--red)}
+.modal-err{color:#f87171;font-size:0.8rem;margin-bottom:0.5rem;display:none}
+.modal-btn{
+  width:100%;background:var(--red);color:var(--white);
+  border:none;padding:0.88rem;border-radius:3px;
+  font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  cursor:pointer;transition:background 0.2s;
+}
+.modal-btn:hover{background:var(--red2)}
+
+/* ── ADMIN PANEL ── */
+#admin-panel{
+  display:none;position:fixed;inset:0;z-index:600;
+  background:var(--black);overflow-y:auto;
+}
+.adm-header{
+  background:var(--iron);border-bottom:2px solid var(--red);
+  padding:0 2rem;height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+}
+.adm-title{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:900;text-transform:uppercase;letter-spacing:0.04em}
+.adm-title span{color:var(--red)}
+.adm-btns{display:flex;gap:0.6rem}
+.abtn{
+  padding:0.45rem 1rem;border-radius:3px;
+  font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  cursor:pointer;border:none;transition:all 0.2s;
+}
+.abtn-red{background:var(--red);color:var(--white)}.abtn-red:hover{background:var(--red2)}
+.abtn-out{background:transparent;color:var(--silver);border:1px solid var(--plate)}.abtn-out:hover{border-color:var(--silver);color:var(--white)}
+.adm-body{padding:2rem}
+.adm-stats{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2.5rem}
+.adm-stat{
+  background:var(--iron);border:1px solid var(--plate);
+  border-radius:3px;padding:1.25rem 1.75rem;flex:1;min-width:130px;
+}
+.adm-stat-n{font-family:'Barlow Condensed',sans-serif;font-size:2.2rem;font-weight:900;color:var(--red);line-height:1}
+.adm-stat-l{font-size:0.68rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--ash);margin-top:0.2rem}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.86rem}
+thead{background:var(--plate)}
+th{padding:0.7rem 0.9rem;text-align:left;font-size:0.66rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--silver);border-bottom:1px solid rgba(255,255,255,0.06)}
+td{padding:0.85rem 0.9rem;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--white);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.badge{display:inline-block;padding:0.18rem 0.5rem;border-radius:2px;font-size:0.66rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase}
+.b-new{background:rgba(212,25,44,0.15);color:#f87171}
+.b-read{background:rgba(255,255,255,0.05);color:var(--silver)}
+.b-btn{background:none;border:none;cursor:pointer;color:var(--ash);font-size:0.82rem;padding:0.2rem 0.35rem;transition:color 0.2s}
+.b-btn:hover{color:var(--red)}
+#adm-empty{text-align:center;padding:4rem;color:var(--ash)}
+#adm-empty .ei{font-size:2.5rem;display:block;margin-bottom:0.75rem}
+
+/* ── REVEAL ── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity 0.65s ease,transform 0.65s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .hero-title{font-size:clamp(3rem,14vw,5rem)}
+  .prog-header{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:500px){
+  .gallery-strip{display:none}
+}
+
+/* Loading overlay for images */
+img{background:var(--steel)}
+</style>
+</head>
+<body>
+
+<canvas id="three-canvas"></canvas>
+
+<!-- NAV -->
+<nav id="main-nav">
+  <a href="#" class="nav-logo">Power<span class="accent">Gym</span><span class="mark"></span></a>
+  <ul class="nav-links">
+    <li><a href="#programs">Programs</a></li>
+    <li><a href="#trainers">Trainers</a></li>
+    <li><a href="#gallery-sec">Gallery</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Join Now</a>
+  <button class="hamburger" id="ham" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mob-menu">
+  <a href="#programs" onclick="closeMob()">Programs</a>
+  <a href="#trainers" onclick="closeMob()">Trainers</a>
+  <a href="#gallery-sec" onclick="closeMob()">Gallery</a>
+  <a href="#contact" onclick="closeMob()">Contact</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Nagercoil's Premier Fitness Centre · Est. 2014</p>
+    <h1 class="hero-title">
+      Forge<br>
+      <span class="line2">Your</span>
+      <span class="line3">Legacy</span>
+    </h1>
+    <p class="hero-sub">Elite equipment, expert coaching, and a community of champions. Your transformation starts the moment you walk through our doors.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">Start Free Trial</a>
+      <a href="#programs" class="btn-ghost">Explore Programs</a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span class="scroll-line"></span>
+    Scroll to explore
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="stat-item"><div class="stat-num">1,<span>2</span>00<span>+</span></div><div class="stat-label">Active Members</div></div>
+  <div class="stat-item"><div class="stat-num"><span>18</span></div><div class="stat-label">Expert Trainers</div></div>
+  <div class="stat-item"><div class="stat-num">12<span>K</span></div><div class="stat-label">Square Feet</div></div>
+  <div class="stat-item"><div class="stat-num"><span>10</span>yr</div><div class="stat-label">In Business</div></div>
+  <div class="stat-item"><div class="stat-num">98<span>%</span></div><div class="stat-label">Satisfaction Rate</div></div>
+</div>
+
+<!-- PROGRAMS -->
+<section id="programs">
+  <div class="prog-header reveal">
+    <div>
+      <p class="section-eyebrow">What We Offer</p>
+      <h2 class="section-title">Training Programs</h2>
+    </div>
+    <p class="section-sub" style="margin-bottom:0">Structured programs that meet you where you are — and push you further than you thought possible.</p>
+  </div>
+  <div class="programs-grid reveal">
+    <div class="program-card">
+      <div class="prog-num">01 · Strength</div>
+      <img class="prog-img" src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&q=80&auto=format" alt="Strength training with barbells" loading="lazy">
+      <div class="prog-name">Strength & Powerlifting</div>
+      <p class="prog-desc">Progressive overload, compound lifts, and periodization built for real gains. Beginner to competition-ready pathways.</p>
+      <span class="prog-tag">Strength · 3× / week</span>
+    </div>
+    <div class="program-card">
+      <div class="prog-num">02 · Conditioning</div>
+      <img class="prog-img" src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80&auto=format" alt="High intensity interval training" loading="lazy">
+      <div class="prog-name">HIIT & Conditioning</div>
+      <p class="prog-desc">High-intensity intervals calibrated to your fitness level. Burn fat, build endurance, and feel the difference in two weeks.</p>
+      <span class="prog-tag">Cardio · 4× / week</span>
+    </div>
+    <div class="program-card">
+      <div class="prog-num">03 · Combat</div>
+      <img class="prog-img" src="https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=600&q=80&auto=format" alt="Boxing and martial arts training" loading="lazy">
+      <div class="prog-name">Combat Fitness</div>
+      <p class="prog-desc">Boxing, MMA-inspired drills, and pad work. Real technique under certified instructors. No experience required.</p>
+      <span class="prog-tag">Combat · 2× / week</span>
+    </div>
+    <div class="program-card">
+      <div class="prog-num">04 · Mobility</div>
+      <img class="prog-img" src="https://images.unsplash.com/photo-1506629082955-511b1aa562c8?w=600&q=80&auto=format" alt="Yoga and mobility training" loading="lazy">
+      <div class="prog-name">Recovery & Mobility</div>
+      <p class="prog-desc">Yoga, targeted stretching, and myofascial release to keep your body performing at its peak and injury-free.</p>
+      <span class="prog-tag">Mobility · 2× / week</span>
+    </div>
+    <div class="program-card">
+      <div class="prog-num">05 · Transform</div>
+      <img class="prog-img" src="https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&q=80&auto=format" alt="Body transformation program" loading="lazy">
+      <div class="prog-name">Body Transformation</div>
+      <p class="prog-desc">12-week guided coaching combining nutrition planning and structured training. Over 200 success stories in our gym.</p>
+      <span class="prog-tag">Transform · 5× / week</span>
+    </div>
+    <div class="program-card">
+      <div class="prog-num">06 · Athletic</div>
+      <img class="prog-img" src="https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=600&q=80&auto=format" alt="Functional athletic training" loading="lazy">
+      <div class="prog-name">Functional Athletics</div>
+      <p class="prog-desc">Sport-specific movement patterns, agility, and explosive power for athletes who want to stay ahead of the competition.</p>
+      <span class="prog-tag">Athletic · 4× / week</span>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY STRIP -->
+<div class="gallery-strip" id="gallery-sec">
+  <div class="gallery-item">
+    <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80&auto=format" alt="Gym floor with equipment" loading="lazy">
+    <span class="gallery-caption">Main Floor · 8,000 sqft</span>
+  </div>
+  <div class="gallery-item">
+    <img src="https://images.unsplash.com/photo-1576678927484-cc907957088c?w=600&q=80&auto=format" alt="Free weights section" loading="lazy">
+    <span class="gallery-caption">Free Weights</span>
+  </div>
+  <div class="gallery-item">
+    <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=600&q=80&auto=format" alt="Group fitness class" loading="lazy">
+    <span class="gallery-caption">Group Classes</span>
+  </div>
+</div>
+
+<!-- TRAINERS -->
+<section id="trainers">
+  <div class="reveal">
+    <p class="section-eyebrow">Meet the Team</p>
+    <h2 class="section-title">Expert Trainers</h2>
+    <p class="section-sub">Certified professionals with decades of combined experience. Your goals are their mission.</p>
+  </div>
+  <div class="trainers-grid reveal">
+    <div class="trainer-card">
+      <div class="trainer-img-wrap">
+        <img class="trainer-img" src="https://images.unsplash.com/photo-1567013127542-490d757e6349?w=500&q=80&auto=format" alt="Arjun Rajan - Head Coach">
+        <div class="trainer-overlay"></div>
+        <span class="trainer-badge">Head Coach</span>
+      </div>
+      <div class="trainer-info">
+        <div class="trainer-name">Arjun Rajan</div>
+        <div class="trainer-role">Powerlifting · Strength</div>
+        <p class="trainer-bio">National-level powerlifter with 12 years of coaching. Specialises in building raw strength from the ground up.</p>
+      </div>
+    </div>
+    <div class="trainer-card">
+      <div class="trainer-img-wrap">
+        <img class="trainer-img" src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=500&q=80&auto=format" alt="Priya Sundaram - Combat Trainer">
+        <div class="trainer-overlay"></div>
+        <span class="trainer-badge">Combat</span>
+      </div>
+      <div class="trainer-info">
+        <div class="trainer-name">Priya Sundaram</div>
+        <div class="trainer-role">Combat Fitness · HIIT</div>
+        <p class="trainer-bio">Former state kickboxing champion. Trains clients to be functional, fast, and fierce.</p>
+      </div>
+    </div>
+    <div class="trainer-card">
+      <div class="trainer-img-wrap">
+        <img class="trainer-img" src="https://images.unsplash.com/photo-1583454155184-870a1f63aebc?w=500&q=80&auto=format" alt="Karthik Nair - Conditioning Coach">
+        <div class="trainer-overlay"></div>
+        <span class="trainer-badge">Conditioning</span>
+      </div>
+      <div class="trainer-info">
+        <div class="trainer-name">Karthik Nair</div>
+        <div class="trainer-role">Strength & Conditioning</div>
+        <p class="trainer-bio">Body-composition specialist. Has helped 200+ members reach their physique goals with science-backed methods.</p>
+      </div>
+    </div>
+    <div class="trainer-card">
+      <div class="trainer-img-wrap">
+        <img class="trainer-img" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?w=500&q=80&auto=format" alt="Meena Krishnan - Mobility Coach">
+        <div class="trainer-overlay"></div>
+        <span class="trainer-badge">Mobility</span>
+      </div>
+      <div class="trainer-info">
+        <div class="trainer-name">Meena Krishnan</div>
+        <div class="trainer-role">Mobility · Yoga · Recovery</div>
+        <p class="trainer-bio">RYT-500 certified. Bridges performance and sustainable movement health so you can train for decades.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-layout">
+    <div class="reveal">
+      <p class="section-eyebrow">Get In Touch</p>
+      <h2 class="section-title">Start Your<br>Journey</h2>
+      <p style="color:var(--silver);font-weight:300;line-height:1.75;margin-bottom:2.5rem;max-width:380px">Questions about memberships, programs, or want a free trial? Drop a message and we'll get back to you within 24 hours.</p>
+      <div class="contact-info-block">
+        <div class="contact-info-item">
+          <div class="c-icon">📍</div>
+          <div><div class="c-label">Location</div><div class="c-value">42 Kovai Road, Nagercoil, Tamil Nadu 629 001</div></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="c-icon">📞</div>
+          <div><div class="c-label">Phone</div><div class="c-value">+91 94876 12345</div></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="c-icon">✉️</div>
+          <div><div class="c-label">Email</div><div class="c-value">info@powergym.in</div></div>
+        </div>
+        <div class="contact-info-item">
+          <div class="c-icon">🕐</div>
+          <div><div class="c-label">Hours</div><div class="c-value">Mon–Sat: 5:00 AM – 10:00 PM<br>Sunday: 6:00 AM – 8:00 PM</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="form-wrapper">
+        <div class="form-title">Send a <span>Message</span></div>
+        <form id="contact-form" onsubmit="submitForm(event)">
+          <div class="form-row">
+            <div class="field"><label for="fn">First Name</label><input type="text" id="fn" placeholder="Ravi" required></div>
+            <div class="field"><label for="ln">Last Name</label><input type="text" id="ln" placeholder="Kumar" required></div>
+          </div>
+          <div class="field"><label for="em">Email Address</label><input type="email" id="em" placeholder="you@example.com" required></div>
+          <div class="field"><label for="ph">Phone Number</label><input type="tel" id="ph" placeholder="+91 98765 43210"></div>
+          <div class="field">
+            <label for="int">I'm Interested In</label>
+            <select id="int">
+              <option value="">Select a program…</option>
+              <option>Strength & Powerlifting</option>
+              <option>HIIT & Conditioning</option>
+              <option>Combat Fitness</option>
+              <option>Recovery & Mobility</option>
+              <option>Body Transformation</option>
+              <option>Functional Athletics</option>
+              <option>General Membership</option>
+              <option>Personal Training</option>
+            </select>
+          </div>
+          <div class="field"><label for="msg">Message</label><textarea id="msg" placeholder="Tell us about your fitness goals…"></textarea></div>
+          <button type="submit" class="form-submit" id="sub-btn">Send Message →</button>
+          <div class="form-msg" id="fmsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">Power<span>Gym</span></div>
+      <p class="footer-tagline">Nagercoil's premier strength and fitness centre. Forging stronger bodies since 2014.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Navigation</div>
+      <ul class="footer-links">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#programs">Programs</a></li>
+        <li><a href="#trainers">Trainers</a></li>
+        <li><a href="#gallery-sec">Gallery</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Programs</div>
+      <ul class="footer-links">
+        <li><a href="#programs">Strength & Powerlifting</a></li>
+        <li><a href="#programs">HIIT & Conditioning</a></li>
+        <li><a href="#programs">Combat Fitness</a></li>
+        <li><a href="#programs">Body Transformation</a></li>
+        <li><a href="#programs">Personal Training</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2026 Power Gym. All rights reserved.<span class="admin-dot" id="admin-trigger" title=""></span></p>
+    <p class="footer-copy">42 Kovai Road, Nagercoil, Tamil Nadu 629 001</p>
+  </div>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal-backdrop" id="login-modal">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeLogin()">✕</button>
+    <div class="modal-title">Admin <span>Access</span></div>
+    <div class="modal-field"><label>Username</label><input type="text" id="au" placeholder="admin" autocomplete="username"></div>
+    <div class="modal-field"><label>Password</label><input type="password" id="ap" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <p class="modal-err" id="lerr">Invalid credentials. Try again.</p>
+    <button class="modal-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <div class="adm-header">
+    <div class="adm-title">Power<span>Gym</span> · Admin</div>
+    <div class="adm-btns">
+      <button class="abtn abtn-out" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="abtn abtn-red" onclick="clearAll()">🗑 Clear All</button>
+      <button class="abtn abtn-out" onclick="closeAdmin()">✕ Exit</button>
+    </div>
+  </div>
+  <div class="adm-body">
+    <div class="adm-stats">
+      <div class="adm-stat"><div class="adm-stat-n" id="s-total">0</div><div class="adm-stat-l">Total Submissions</div></div>
+      <div class="adm-stat"><div class="adm-stat-n" id="s-new">0</div><div class="adm-stat-l">Unread</div></div>
+      <div class="adm-stat"><div class="adm-stat-n" id="s-today">0</div><div class="adm-stat-l">Today</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <table id="adm-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Interest</th><th>Message</th><th>Date</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adm-body"></tbody>
+      </table>
+      <div id="adm-empty">
+        <span class="ei">📭</span>
+        <p style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;text-transform:uppercase;margin-bottom:0.4rem">No submissions yet</p>
+        <p style="font-size:0.82rem">Contact form entries will appear here.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THREE.JS 3D BACKGROUND -->
+<script>
+(function(){
+  const canvas = document.getElementById('three-canvas');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setClearColor(0x000000,0);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,1000);
+  camera.position.z = 30;
+
+  /* Floating particles — small glowing dots */
+  const pCount = 280;
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(pCount*3);
+  const pSpeeds = [];
+  for(let i=0;i<pCount;i++){
+    pPos[i*3]=(Math.random()-0.5)*120;
+    pPos[i*3+1]=(Math.random()-0.5)*80;
+    pPos[i*3+2]=(Math.random()-0.5)*60;
+    pSpeeds.push({vx:(Math.random()-0.5)*0.015, vy:(Math.random()-0.5)*0.012, vz:(Math.random()-0.5)*0.008});
+  }
+  pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+  const pMat = new THREE.PointsMaterial({color:0xd4192c,size:0.22,transparent:true,opacity:0.55,sizeAttenuation:true});
+  const particles = new THREE.Points(pGeo,pMat);
+  scene.add(particles);
+
+  /* Secondary gold particles */
+  const p2Count = 120;
+  const p2Geo = new THREE.BufferGeometry();
+  const p2Pos = new Float32Array(p2Count*3);
+  const p2Speeds = [];
+  for(let i=0;i<p2Count;i++){
+    p2Pos[i*3]=(Math.random()-0.5)*100;
+    p2Pos[i*3+1]=(Math.random()-0.5)*70;
+    p2Pos[i*3+2]=(Math.random()-0.5)*50;
+    p2Speeds.push({vx:(Math.random()-0.5)*0.01, vy:(Math.random()-0.5)*0.009, vz:(Math.random()-0.5)*0.006});
+  }
+  p2Geo.setAttribute('position',new THREE.BufferAttribute(p2Pos,3));
+  const p2Mat = new THREE.PointsMaterial({color:0xc8962a,size:0.15,transparent:true,opacity:0.35,sizeAttenuation:true});
+  const particles2 = new THREE.Points(p2Geo,p2Mat);
+  scene.add(particles2);
+
+  /* Grid lines on a plane */
+  const gridHelper = new THREE.GridHelper(200,40,0x1a1a20,0x111115);
+  gridHelper.rotation.x = Math.PI/6;
+  gridHelper.position.y = -18;
+  gridHelper.position.z = -20;
+  scene.add(gridHelper);
+
+  /* Wireframe icosahedron — large background shape */
+  const icoGeo = new THREE.IcosahedronGeometry(18,1);
+  const icoMat = new THREE.MeshBasicMaterial({color:0x1a0508,wireframe:true,transparent:true,opacity:0.18});
+  const ico = new THREE.Mesh(icoGeo,icoMat);
+  ico.position.set(22,-4,-15);
+  scene.add(ico);
+
+  /* Second smaller icosahedron */
+  const ico2Geo = new THREE.IcosahedronGeometry(9,1);
+  const ico2Mat = new THREE.MeshBasicMaterial({color:0x100d02,wireframe:true,transparent:true,opacity:0.12});
+  const ico2 = new THREE.Mesh(ico2Geo,ico2Mat);
+  ico2.position.set(-28,6,-10);
+  scene.add(ico2);
+
+  /* Torus ring */
+  const torusGeo = new THREE.TorusGeometry(12,0.08,8,80);
+  const torusMat = new THREE.MeshBasicMaterial({color:0xd4192c,transparent:true,opacity:0.08});
+  const torus = new THREE.Mesh(torusGeo,torusMat);
+  torus.position.set(20,-8,-25);
+  torus.rotation.x = Math.PI/3;
+  scene.add(torus);
+
+  /* Mouse parallax */
+  let mx=0,my=0;
+  document.addEventListener('mousemove',e=>{
+    mx=(e.clientX/window.innerWidth-0.5)*2;
+    my=(e.clientY/window.innerHeight-0.5)*2;
+  });
+
+  let t=0;
+  function animate(){
+    requestAnimationFrame(animate);
+    t+=0.008;
+
+    /* animate particles */
+    const pp=particles.geometry.attributes.position.array;
+    for(let i=0;i<pCount;i++){
+      pp[i*3]+=pSpeeds[i].vx;
+      pp[i*3+1]+=pSpeeds[i].vy;
+      pp[i*3+2]+=pSpeeds[i].vz;
+      if(Math.abs(pp[i*3])>60){pSpeeds[i].vx*=-1}
+      if(Math.abs(pp[i*3+1])>40){pSpeeds[i].vy*=-1}
+      if(Math.abs(pp[i*3+2])>30){pSpeeds[i].vz*=-1}
+    }
+    particles.geometry.attributes.position.needsUpdate=true;
+
+    const p2p=particles2.geometry.attributes.position.array;
+    for(let i=0;i<p2Count;i++){
+      p2p[i*3]+=p2Speeds[i].vx;
+      p2p[i*3+1]+=p2Speeds[i].vy;
+      p2p[i*3+2]+=p2Speeds[i].vz;
+      if(Math.abs(p2p[i*3])>50){p2Speeds[i].vx*=-1}
+      if(Math.abs(p2p[i*3+1])>35){p2Speeds[i].vy*=-1}
+      if(Math.abs(p2p[i*3+2])>25){p2Speeds[i].vz*=-1}
+    }
+    particles2.geometry.attributes.position.needsUpdate=true;
+
+    /* rotate shapes */
+    ico.rotation.x=t*0.18;
+    ico.rotation.y=t*0.12;
+    ico2.rotation.x=-t*0.14;
+    ico2.rotation.y=t*0.09;
+    torus.rotation.z=t*0.08;
+
+    /* camera parallax on mouse */
+    camera.position.x+=(mx*3-camera.position.x)*0.04;
+    camera.position.y+=(-my*2-camera.position.y)*0.04;
+    camera.lookAt(scene.position);
+
+    /* grid slow drift */
+    gridHelper.position.x=Math.sin(t*0.15)*5;
+
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+})();
+</script>
+
+<!-- SITE LOGIC -->
+<script>
+/* ── Mobile menu ── */
+const ham=document.getElementById('ham');
+const mob=document.getElementById('mob-menu');
+ham.addEventListener('click',()=>mob.classList.toggle('open'));
+function closeMob(){mob.classList.remove('open')}
+
+/* ── DB ── */
+const DB='pg_contacts';
+function getDB(){try{return JSON.parse(localStorage.getItem(DB)||'[]')}catch{return[]}}
+function saveDB(d){localStorage.setItem(DB,JSON.stringify(d))}
+function addEntry(e){const d=getDB();e.id=Date.now();e.date=new Date().toISOString();e.status='new';d.unshift(e);saveDB(d)}
+function markRead(id){const d=getDB();const i=d.findIndex(s=>s.id===id);if(i>-1){d[i].status='read';saveDB(d);renderTable()}}
+function delEntry(id){saveDB(getDB().filter(s=>s.id!==id));renderTable()}
+
+/* ── Form ── */
+function submitForm(e){
+  e.preventDefault();
+  const btn=document.getElementById('sub-btn');
+  const msg=document.getElementById('fmsg');
+  btn.disabled=true;btn.textContent='Sending…';
+  const entry={
+    fname:document.getElementById('fn').value.trim(),
+    lname:document.getElementById('ln').value.trim(),
+    email:document.getElementById('em').value.trim(),
+    phone:document.getElementById('ph').value.trim(),
+    interest:document.getElementById('int').value,
+    message:document.getElementById('msg').value.trim()
+  };
+  setTimeout(()=>{
+    addEntry(entry);
+    msg.className='form-msg ok';
+    msg.textContent='✓ Message sent! We\'ll contact you within 24 hours.';
+    document.getElementById('contact-form').reset();
+    btn.disabled=false;btn.textContent='Send Message →';
+  },600);
+}
+
+/* ── Hidden admin trigger (tiny dot in footer) ── */
+document.getElementById('admin-trigger').addEventListener('click',()=>{
+  document.getElementById('login-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('au').focus(),80);
+});
+
+/* ── Login ── */
+const CREDS={u:'admin',p:'powergym2024'};
+function closeLogin(){
+  document.getElementById('login-modal').classList.remove('show');
+  document.getElementById('lerr').style.display='none';
+  document.getElementById('au').value='';
+  document.getElementById('ap').value='';
+}
+function doLogin(){
+  const u=document.getElementById('au').value;
+  const p=document.getElementById('ap').value;
+  if(u===CREDS.u&&p===CREDS.p){closeLogin();openAdmin()}
+  else{document.getElementById('lerr').style.display='block'}
+}
+
+/* ── Admin ── */
+function openAdmin(){
+  document.getElementById('admin-panel').style.display='block';
+  document.body.style.overflow='hidden';
+  renderTable();
+}
+function closeAdmin(){
+  document.getElementById('admin-panel').style.display='none';
+  document.body.style.overflow='';
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function renderTable(){
+  const d=getDB();
+  const tbody=document.getElementById('adm-body');
+  const empty=document.getElementById('adm-empty');
+  const tbl=document.getElementById('adm-table');
+  const today=new Date().toDateString();
+  const todayN=d.filter(s=>new Date(s.date).toDateString()===today).length;
+  const newN=d.filter(s=>s.status==='new').length;
+  document.getElementById('s-total').textContent=d.length;
+  document.getElementById('s-new').textContent=newN;
+  document.getElementById('s-today').textContent=todayN;
+  if(!d.length){tbl.style.display='none';empty.style.display='block';return}
+  tbl.style.display='';empty.style.display='none';
+  tbody.innerHTML=d.map((s,i)=>{
+    const dt=new Date(s.date);
+    const ds=dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const ts=dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    const badge=s.status==='new'?'<span class="badge b-new">New</span>':'<span class="badge b-read">Read</span>';
+    return`<tr>
+      <td style="color:var(--ash)">${d.length-i}</td>
+      <td><strong>${esc(s.fname)} ${esc(s.lname)}</strong></td>
+      <td><a href="mailto:${esc(s.email)}" style="color:var(--red);text-decoration:none">${esc(s.email)}</a></td>
+      <td>${esc(s.phone)||'—'}</td>
+      <td>${esc(s.interest)||'—'}</td>
+      <td style="max-width:180px;color:var(--silver);font-size:0.8rem">${esc(s.message)||'—'}</td>
+      <td style="color:var(--silver);font-size:0.78rem;white-space:nowrap">${ds}<br>${ts}</td>
+      <td>${badge}</td>
+      <td style="white-space:nowrap">
+        ${s.status==='new'?`<button class="b-btn" onclick="markRead(${s.id})" title="Mark read">✓</button>`:''}
+        <button class="b-btn" onclick="delEntry(${s.id})" title="Delete">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function exportCSV(){
+  const d=getDB();if(!d.length)return alert('No data to export.');
+  const h=['#','First Name','Last Name','Email','Phone','Interest','Message','Date','Status'];
+  const rows=d.map((s,i)=>[d.length-i,s.fname,s.lname,s.email,s.phone,s.interest,s.message,s.date,s.status].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  const csv=[h.join(','),...rows].join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='powergym-contacts.csv';a.click();
+}
+function clearAll(){if(confirm('Delete ALL contact submissions? This cannot be undone.')){saveDB([]);renderTable()}}
+
+/* ── Scroll reveal ── */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in')}),{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ── Close modal on backdrop click ── */
+document.getElementById('login-modal').addEventListener('click',function(e){if(e.target===this)closeLogin()});
+</script>
+</body>
+</html>
